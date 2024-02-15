@@ -1,0 +1,17 @@
+.video-container {
+    position: relative;
+     overflow: hidden;
+  }
+  
+  video {
+    display: block;
+    
+  }
+  
+  .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: rgba(255, 0, 0, 0);  // Set your desired overlay color and opacity
+    z-index: 2;  // Ensure the div is rendered above the video
+  }
