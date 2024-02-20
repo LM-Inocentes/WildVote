@@ -1,6 +1,11 @@
 import { Component, ElementRef, ViewChild } from '@angular/core';
-import { FaceDetectionService } from '../services/face-detection.service'
 import { WebcamComponent } from "../components/webcam/webcam.component";
+import { AuthService } from '../services/auth.service';
+import { FaceDetectionService } from '../services/face-detection.service';
+import { Subscription } from 'rxjs';
+import { Router } from '@angular/router';
+import { HotToastService } from '@ngneat/hot-toast';
+import { User } from '../shared/models/User';
 
 @Component({
     selector: 'app-login',
@@ -11,8 +16,22 @@ import { WebcamComponent } from "../components/webcam/webcam.component";
 })
 export class LoginComponent {
 
+  private recognitionResultSubscription!: Subscription;
+  recognitionResult!: string | null;
 
-  constructor(private faceDetectionService: FaceDetectionService) {}
+  constructor(private authservice: AuthService, private facedetectionservice: FaceDetectionService, private router: Router, private hotToastService: HotToastService) {
+
+  }
+
+  ngOnInit() {
+    this.recognitionResultSubscription = this.facedetectionservice.recognitionResult$.subscribe(result => {
+      this.recognitionResult = result
+    });
+  }
+
+  ngOnDestroy() {
+    this.recognitionResultSubscription.unsubscribe();
+  }
 
   toggleSignInMode() {
     const container = document.querySelector('.container');
@@ -34,4 +53,20 @@ export class LoginComponent {
     container!.classList.add('sign-up-mode2');
   }
 
+  onTakePhotoClick() {
+    this.facedetectionservice.triggerTakePhoto();
+  }
+
+  Login(){
+    let nonNullid: string = this.recognitionResult || 'unknown';
+    this.authservice.login({id: nonNullid}).pipe(
+      this.hotToastService.observe({
+        loading: 'Logging In...',
+        success: 'Logged In!',
+        error: 'User Face No Match',
+      })
+    ).subscribe(() => {
+      this.router.navigateByUrl('/');
+    });
+  }
 }

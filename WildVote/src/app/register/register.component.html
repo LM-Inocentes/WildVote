@@ -1,49 +1,43 @@
-<div class="form-container mat-elevation-z5">
-    <h1>Sign Up a New User!</h1>
-    <form [formGroup]="signUpForm" (ngSubmit)="submit()">
-      <mat-form-field>
-        <input matInput placeholder="Name" formControlName="name" />
-        <mat-error *ngIf="name?.errors?.['required']">
-          Name is required
-        </mat-error>
-      </mat-form-field>
-      <mat-form-field>
-        <input matInput placeholder="Email address" formControlName="email" />
-        <mat-error *ngIf="email?.errors?.['required']">
-          Email address is required
-        </mat-error>
-        <mat-error *ngIf="email?.errors?.['email']">
-          Please enter a valid email address
-        </mat-error>
-      </mat-form-field>
-      <mat-form-field>
-        <input
-          matInput
-          type="password"
-          placeholder="Password"
-          formControlName="password"
-        />
-        <mat-error *ngIf="password?.errors?.['required']">
-          Password is required
-        </mat-error>
-      </mat-form-field>
-      <mat-form-field>
-        <input
-          matInput
-          type="password"
-          placeholder="Confirm Password"
-          formControlName="confirmPassword"
-        />
-        <mat-error *ngIf="confirmPassword?.errors?.['required']">
-          Confirm Password is required
-        </mat-error>
-      </mat-form-field>
-      <mat-error *ngIf="signUpForm.errors?.['passwordsDontMatch']">
-          Passwords should match
-      </mat-error>
-      <div class="center margin-top">
-        <button type="submit" mat-raised-button color="primary">Sign Up!</button>
-      </div>
-    </form>
-  </div>
-  
+<div class="general-container">
+    <h1>WildVote</h1>
+    <div class="container">
+        <div class="signin-signup">
+            <form action="" class="sign-in-form">            
+                <div class="center-container">
+                    <app-webcam></app-webcam>
+                </div>
+                <p class="account-text">Don't have an account? <a (click)="toggleSignUpMode2()" id="sign-up-btn2">Sign up</a></p>
+            </form>
+            <form action="" class="sign-up-form" (submit)="onFormSubmit($event)">
+                <h2 class="title">Sign up</h2>
+                <div class="input-field">
+                  <i class="fas fa-user"></i>
+                  <input type="text" placeholder="ID Number" #idNumberInput>
+                </div>
+                <div class="input-field">
+                  <i class="fas fa-envelope"></i>
+                  <input type="text" placeholder="Fullname" #fullnameInput>
+                </div>
+                <input type="submit" value="Register" class="btn">
+            </form>
+        </div>
+        <div class="panels-container">
+            <div class="panel left-panel">
+                <div class="content">
+                    <h3>Recapture Face?</h3>
+                    <p>Click the "Return" button</p>
+                    <button class="btn" id="sign-in-btn" (click)="toggleSignInMode()">Return</button>
+                </div>
+                <img src="signin.svg" alt="" class="image">
+            </div>
+            <div class="panel right-panel">
+                <div class="content">
+                    <h3>Register New User?</h3>
+                    <p>Make the new user face the camera. Click the "Capture" button to proceed.</p>
+                    <button class="btn" id="sign-up-btn" (click)="toggleSignUpMode()">Capture</button>
+                </div>
+                <img src="signup.svg" alt="" class="image">
+            </div>
+        </div>
+    </div>
+</div>

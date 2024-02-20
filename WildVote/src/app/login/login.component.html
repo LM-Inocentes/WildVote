@@ -3,64 +3,23 @@
     <h1>WildVote</h1>
     <div class="container">
         <div class="signin-signup">
-            <form action="" class="sign-in-form">
-                <h2 class="title">Sign in</h2>
-                
+            <form action="" class="sign-in-form">      
                 <div class="center-container">
                     <app-webcam></app-webcam>
                 </div>
-                
-                <input type="submit" value="Login" class="btn">
-                <p class="social-text">Or Sign in with social platform</p>
-                <p class="account-text">Don't have an account? <a (click)="toggleSignUpMode2()" id="sign-up-btn2">Sign up</a></p>
             </form>
             <form action="" class="sign-up-form">
-                <h2 class="title">Sign up</h2>
-                <div class="input-field">
-                    <i class="fas fa-user"></i>
-                    <input type="text" placeholder="Username">
-                </div>
-                <div class="input-field">
-                    <i class="fas fa-envelope"></i>
-                    <input type="text" placeholder="Email">
-                </div>
-                <div class="input-field">
-                    <i class="fas fa-lock"></i>
-                    <input type="password" placeholder="Password">
-                </div>
-                <input type="submit" value="Sign up" class="btn">
-                <p class="social-text">Or Sign in with social platform</p>
-                <div class="social-media">
-                    <a href="#" class="social-icon">
-                        <i class="fab fa-facebook"></i>
-                    </a>
-                    <a href="" class="social-icon">
-                        <i class="fab fa-twitter"></i>
-                    </a>
-                    <a href="" class="social-icon">
-                        <i class="fab fa-google"></i>
-                    </a>
-                    <a href="" class="social-icon">
-                        <i class="fab fa-linkedin-in"></i>
-                    </a>
-                </div>
-                <p class="account-text">Already have an account? <a (click)="toggleSignInMode2()" id="sign-in-btn2">Sign in</a></p>
+                <!-- Other form here  -->
             </form>
         </div>
         <div class="panels-container">
             <div class="panel left-panel">
-                <div class="content">
-                    <h3>Member of Brand?</h3>
-                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Neque accusantium dolor, eos incidunt minima iure?</p>
-                    <button class="btn" id="sign-in-btn" (click)="toggleSignInMode()">Sign in</button>
-                </div>
-                <img src="signin.svg" alt="" class="image">
             </div>
             <div class="panel right-panel">
                 <div class="content">
-                    <h3>New to Brand?</h3>
-                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Neque accusantium dolor, eos incidunt minima iure?</p>
-                    <button class="btn" id="sign-up-btn" (click)="toggleSignUpMode()">Sign up</button>
+                    <h3>Welcome to WildVote</h3>
+                    <p>To get started, position your face within the camera frame. Then, wait for facial recognition to identify your identity. Once recognized, click the "Login" button to proceed.</p>
+                    <button class="btn" id="sign-up-btn" (click)="Login()">Login</button>
                 </div>
                 <img src="signup.svg" alt="" class="image">
             </div>

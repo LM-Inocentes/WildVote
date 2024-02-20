@@ -1,7 +1,7 @@
 export class User{
-    isAdmin!: boolean; 
+    isAdmin?: boolean; 
     id!: string;
-    Fullname!: string;
-    ReferenceFaceURL!: string;          
+    Fullname?: string;
+    ReferenceFaceURL?: string;          
     token?: string;
 }

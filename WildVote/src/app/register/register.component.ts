@@ -1,97 +1,71 @@
-// import { Component, OnInit } from '@angular/core';
-// import {
-//   AbstractControl,
-//   FormControl,
-//   FormGroup,
-//   NonNullableFormBuilder,
-//   ValidationErrors,
-//   ValidatorFn,
-//   Validators,
-// } from '@angular/forms';
-// import { Router } from '@angular/router';
-// import { HotToastService } from '@ngneat/hot-toast';
-// import { switchMap } from 'rxjs/operators';
-// import { AuthService } from 'src/app/services/auth.service';
-// import { UsersService } from 'src/app/services/users.service';
+import { Component, ElementRef, ViewChild } from '@angular/core';
+import { FaceDetectionService } from '../services/face-detection.service';
+import { WebcamComponent } from "../components/webcam/webcam.component";
+import { Subscription } from 'rxjs';
+import { HotToastService } from '@ngneat/hot-toast';
+import { User } from '../shared/models/User';
+import { AuthService } from '../services/auth.service';
 
-// export function passwordsMatchValidator(): ValidatorFn {
-//   return (control: AbstractControl): ValidationErrors | null => {
-//     const password = control.get('password')?.value;
-//     const confirmPassword = control.get('confirmPassword')?.value;
+@Component({
+    selector: 'app-register',
+    standalone: true,
+    templateUrl: './register.component.html',
+    styleUrl: './register.component.scss',
+    imports: [WebcamComponent]
+})
+export class RegisterComponent {
+  @ViewChild('idNumberInput', { static: true }) idNumberInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('fullnameInput', { static: true }) fullnameInput!: ElementRef<HTMLInputElement>;
+  private imageCaptureSubscription!: Subscription;
+  receivedFile!: File | null;
 
-//     if (password && confirmPassword && password !== confirmPassword) {
-//       return { passwordsDontMatch: true };
-//     } else {
-//       return null;
-//     }
-//   };
-// }
+  constructor(private faceDetectionService: FaceDetectionService, private hotToastService: HotToastService, private authservice: AuthService) {}
 
-// @Component({
-//   selector: 'app-register',
-//   standalone: true,
-//   imports: [],
-//   templateUrl: './register.component.html',
-//   styleUrl: './register.component.scss'
-// })
-// export class RegisterComponent implements OnInit {
-//   signUpForm = this.fb.group(
-//     {
-//       name: ['', Validators.required],
-//       email: ['', [Validators.required, Validators.email]],
-//       password: ['', Validators.required],
-//       confirmPassword: ['', Validators.required],
-//     },
-//     { validators: passwordsMatchValidator() }
-//   );
+  ngOnInit() {
+    this.imageCaptureSubscription = this.faceDetectionService.file$.subscribe(file => {
+      // Do something with the received file
+      this.receivedFile = file;
+    });
+  }
 
-//   constructor(
-//     private authService: AuthService,
-//     private router: Router,
-//     private toast: HotToastService,
-//     private usersService: UsersService,
-//     private fb: NonNullableFormBuilder
-//   ) {}
+  ngOnDestroy() {
+    this.imageCaptureSubscription.unsubscribe();
+  }
 
-//   ngOnInit(): void {}
+  toggleSignInMode() {
+    const container = document.querySelector('.container');
+    container!.classList.remove('sign-up-mode');
+  }
 
-//   get email() {
-//     return this.signUpForm.get('email');
-//   }
+  toggleSignUpMode() {
+    const container = document.querySelector('.container');
+    container!.classList.add('sign-up-mode');
+    this.faceDetectionService.triggerTakePhoto();
+    this.hotToastService.success('Face Captured');
+  }
 
-//   get password() {
-//     return this.signUpForm.get('password');
-//   }
+  toggleSignInMode2() {
+    const container = document.querySelector('.container');
+    container!.classList.remove('sign-up-mode2');
+  }
 
-//   get confirmPassword() {
-//     return this.signUpForm.get('confirmPassword');
-//   }
+  toggleSignUpMode2() {
+    const container = document.querySelector('.container');
+    container!.classList.add('sign-up-mode2');
+    
+  }
 
-//   get name() {
-//     return this.signUpForm.get('name');
-//   }
+  onFormSubmit(event: Event): void {
+    event.preventDefault();
+  
+    const id = this.idNumberInput.nativeElement.value;
+    const fullname = this.fullnameInput.nativeElement.value;
+    if (!id || !fullname) {
+      this.hotToastService.error('Please Input Required Details');
+      return;
+  }
+    const file: File = this.receivedFile!;
+    this.authservice.register(id, fullname, file).subscribe();
+  }
 
-//   submit() {
-//     const { name, email, password } = this.signUpForm.value;
-
-//     if (!this.signUpForm.valid || !name || !password || !email) {
-//       return;
-//     }
-
-//     this.authService
-//       .signUp(email, password)
-//       .pipe(
-//         switchMap(({ user: { uid } }) =>
-//           this.usersService.addUser({ uid, email, displayName: name })
-//         ),
-//         this.toast.observe({
-//           success: 'Congrats! You are all signed up',
-//           loading: 'Signing up...',
-//           error: ({ message }) => `${message}`,
-//         })
-//       )
-//       .subscribe(() => {
-//         this.router.navigate(['/home']);
-//       });
-//   }
-// }
+}

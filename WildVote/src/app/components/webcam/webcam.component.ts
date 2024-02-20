@@ -1,7 +1,9 @@
-import { Component, ElementRef, HostListener, OnInit, Renderer2, ViewChild } from '@angular/core';
+import { Component, ElementRef, HostListener, OnDestroy, OnInit, Renderer2, ViewChild } from '@angular/core';
 import * as faceapi from 'face-api.js';
 import { FaceDetectionService } from '../../services/face-detection.service';
 import { User } from '../../shared/models/User';
+import { AuthService } from '../../services/auth.service';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-webcam',
@@ -10,7 +12,7 @@ import { User } from '../../shared/models/User';
   templateUrl: './webcam.component.html',
   styleUrl: './webcam.component.scss'
 })
-export class WebcamComponent implements OnInit{
+export class WebcamComponent implements OnInit, OnDestroy{
   WIDTH = 400;
   HEIGHT = 280;
   private MODEL_URL = '../../../assets/models';
@@ -20,46 +22,33 @@ export class WebcamComponent implements OnInit{
   public videoElement!: ElementRef;
   @ViewChild('canvas', { static: true })
   public canvasElement!: ElementRef;
+  private destroy$ = new Subject<void>();
 
-  constructor(private facedetectionservice: FaceDetectionService, private renderer: Renderer2) {}
-
+  constructor(private facedetectionservice: FaceDetectionService, private renderer: Renderer2, private authservice: AuthService) {}
+  
   async ngOnInit() {
     
-    this.user[0] = {
-      isAdmin: false, 
-      id: "20-3065-505",
-      Fullname: "LM Inocentes",
-      ReferenceFaceURL: "https://res.cloudinary.com/de4dinse3/image/upload/v1707901029/npayne9buyxecgfkyxed.jpg"       
-    }
-    
-    this.user[1] = {
-      isAdmin: false, 
-      id: "22-2222-222",
-      Fullname: "Sample",
-      ReferenceFaceURL: "https://res.cloudinary.com/de4dinse3/image/upload/v1707901011/cld-sample.jpg"       
-    }
+    this.authservice.getUsers().subscribe(users => {
+      this.user = users;
+    });
 
-    this.user[2] = {
-      isAdmin: false, 
-      id: "11-1111-111",
-      Fullname: "LM Inocentes 2",
-      ReferenceFaceURL: "https://res.cloudinary.com/de4dinse3/image/upload/v1708003580/rafhrrzdornzyetszhhd.png"       
-    }
-
-    this.user[3] = {
-      isAdmin: false, 
-      id: "33-3333-333",
-      Fullname: "LM Inocentes 2",
-      ReferenceFaceURL: "https://res.cloudinary.com/de4dinse3/image/upload/v1708004620/yoqppt4oilb6p2yhfwc0.png"       
-    }
-    
     await Promise.all([
       faceapi.loadTinyFaceDetectorModel(this.MODEL_URL),
       faceapi.loadSsdMobilenetv1Model(this.MODEL_URL),
       faceapi.loadFaceRecognitionModel(this.MODEL_URL),
       faceapi.loadFaceLandmarkModel(this.MODEL_URL),
     ]).then(() => this.startWebcam());
+
+    this.facedetectionservice.takePhoto$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.takePhoto());
   }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
 
   stream: any;
   detection: any;
@@ -68,6 +57,7 @@ export class WebcamComponent implements OnInit{
   canvasEl: any;
   displaySize: any;
   videoInput: any;
+  
 
   async startWebcam() {
     const video: HTMLVideoElement = this.videoElement.nativeElement;
@@ -98,34 +88,32 @@ export class WebcamComponent implements OnInit{
         if (!face) {
           return
         }  
-
-
         
-        const resizedDetections = faceapi.resizeResults([face], { width: video.width, height: video.height });
-
         canvas.getContext('2d')?.clearRect(0, 0, canvas.width, canvas.height);
+        //  Multiple Face Detections
+        // const resizedDetections = faceapi.resizeResults([face], { width: video.width, height: video.height });
+        
+        // const results = resizedDetections.map((d) => {
+        //   return faceMatcher.findBestMatch(d.descriptor);
+        // });
 
-        const results = resizedDetections.map((d) => {
-          return faceMatcher.findBestMatch(d.descriptor);
+        // results.forEach((result, i) => {
+        //   const box = resizedDetections[i].detection.box;
+        //   const drawBox = new faceapi.draw.DrawBox(box, {
+        //     label: result.label,
+        //   });
+        //   drawBox.draw(canvas);
+        // });
+
+        // Single Face Detection
+        const resizedDetections = faceapi.resizeResults([face], { width: video.width, height: video.height });
+        const result = faceMatcher.findBestMatch(resizedDetections[0].descriptor);
+        const box = resizedDetections[0].detection.box;
+        const drawBox = new faceapi.draw.DrawBox(box, {
+          label: result.label,
         });
-        results.forEach((result, i) => {
-          const box = resizedDetections[i].detection.box;
-          const drawBox = new faceapi.draw.DrawBox(box, {
-            label: result.label,
-          });
-          drawBox.draw(canvas);
-        });
-
-        // // Draw bounding boxes around detected faces
-        // faceapi.draw.drawDetections(canvas, resizedDetections);
-
-        // // Draw face landmarks (optional)
-        // //faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
-
-        // const x = resizedDetections[0].detection.box.x;
-        // const y = resizedDetections[0].detection.box.y - 20;
-        // const descriptorText = bestMatch.label;
-        // canvas.getContext('2d')?.fillText(descriptorText, x, y);
+        drawBox.draw(canvas);
+        this.facedetectionservice.setRecognitionResult(result.label);
       }, 100);
     });
   }
@@ -147,6 +135,27 @@ export class WebcamComponent implements OnInit{
       })
     );
   }
+
+  async takePhoto() {
+    const video: HTMLVideoElement = this.videoElement.nativeElement;
+    const canvas = faceapi.createCanvasFromMedia(video);
+
+    const context = canvas.getContext('2d');
+    canvas.width = video.width;
+    canvas.height = video.height;
+
+    // Draw the current frame from the video onto the canvas
+    context!.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    // Convert the canvas content to a data URL representing a PNG image
+    const blob = await fetch(canvas.toDataURL('image/png')).then(response => response.blob());
+
+    // Create a File object with a specific file name and type
+    
+    this.facedetectionservice.setFile(blob);
+  }
+
+  
 
   
 
